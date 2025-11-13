@@ -82,7 +82,16 @@ def fetch_rss_feed(feed_url: str, last_update: datetime) -> list:
     new_items = []
     logging.info(f"There are in total {len(feed.entries)} entries for {feed_url}")
     for entry in feed.entries:        
-        if datetime(*entry.published_parsed[:6]) > last_update:
+        # Around line 85, replace:
+        # if datetime(*entry.published_parsed[:6]) > last_update:
+        # With:
+        # Try multiple date fields in order of preference
+        entry_date = None
+        if hasattr(entry, 'published_parsed') and entry.published_parsed:
+            entry_date = datetime(*entry.published_parsed[:6])
+        elif hasattr(entry, 'updated_parsed') and entry.updated_parsed:
+            entry_date = datetime(*entry.updated_parsed[:6])
+        ##
             og = get_opengraph_data(entry.link)
             if og.get("image"):
                 entry.media_content=og.get("image")
