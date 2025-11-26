@@ -76,28 +76,29 @@ def save_last_update(timestamp: datetime):
     logging.info(f"Saved last update timestamp to GitHub repo variable")
 
 
-def fetch_rss_feed(feed_url: str, last_update: datetime) -> list:
-    """Fetch and parse RSS feed, returning new items since last update."""
+def fetch_rss_feed(feed_url, last_update):
+    """Fetch RSS feed and return entries newer than last_update."""
     feed = feedparser.parse(feed_url)
-    new_items = []
     logging.info(f"There are in total {len(feed.entries)} entries for {feed_url}")
-    for entry in feed.entries:        
-        # Around line 85, replace:
-        # if datetime(*entry.published_parsed[:6]) > last_update:
-        # With:
-        # Try multiple date fields in order of preference
+    
+    new_entries = []
+    for entry in feed.entries:
+        # Try to get the publication date from multiple fields
         entry_date = None
+        
         if hasattr(entry, 'published_parsed') and entry.published_parsed:
             entry_date = datetime(*entry.published_parsed[:6])
         elif hasattr(entry, 'updated_parsed') and entry.updated_parsed:
             entry_date = datetime(*entry.updated_parsed[:6])
-        ##
-            og = get_opengraph_data(entry.link)
-            if og.get("image"):
-                entry.media_content=og.get("image")
-            new_items.append(entry)
-
-    return new_items
+        
+        # If no date found, include the entry (or skip it based on your preference)
+        if entry_date is None:
+            logging.warning(f"Entry '{entry.get('title', 'Unknown')}' has no date, including it")
+            new_entries.append(entry)
+        elif entry_date > last_update:
+            new_entries.append(entry)
+    
+    return new_entries
 
 
 def get_list_id(host: str, api_user: str, api_token: str, list_name: str) -> int:
