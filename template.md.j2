@@ -1,15 +1,10 @@
-Hi there,
+Hey there,
 
-Thank you for your interest in my blog! Here are the latest updates.
-
-Cheers
-Stephan
+Check out the latest updates from candide ꘎ media:
 
 {% for item in items %}
 ## [{{ item.title }}]({{ item.link }})
 
 {{ item.summary|safe }}
-
-![Image]({{ item.media_content }})
 
 {% endfor %}
